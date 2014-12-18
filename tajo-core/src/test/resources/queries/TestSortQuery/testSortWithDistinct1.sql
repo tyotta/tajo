@@ -1,0 +1,1 @@
+select distinct l_linenumber, l_orderkey as sortkey from lineitem order by l_linenumber, sortkey;
