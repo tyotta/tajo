@@ -28,6 +28,8 @@ public class StorageConstants {
   @Deprecated
   public static final String CSVFILE_NULL = "csvfile.null";
   @Deprecated
+  public static final String CSVFILE_HEADERLINE_COUNT = "csvfile.headerLineCount";
+  @Deprecated
   public static final String CSVFILE_SERDE = "csvfile.serde";
 
   public static final String TEXT_DELIMITER = "text.delimiter";
@@ -47,6 +49,8 @@ public class StorageConstants {
   public static final String DEFAULT_FIELD_DELIMITER = "|";
   public static final String DEFAULT_BINARY_SERDE = "org.apache.tajo.storage.BinarySerializerDeserializer";
   public static final String DEFAULT_TEXT_SERDE = "org.apache.tajo.storage.TextSerializerDeserializer";
+
+  public static final String DEFAULT_CSVFILE_HEADERLINE_COUNT = "0";
 
   public static final String PARQUET_DEFAULT_BLOCK_SIZE;
   public static final String PARQUET_DEFAULT_PAGE_SIZE;

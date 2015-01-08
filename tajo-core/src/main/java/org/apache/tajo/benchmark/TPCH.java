@@ -44,6 +44,7 @@ public class TPCH extends BenchmarkSet {
   public static final String LINEITEM = "lineitem";
   public static final String CUSTOMER = "customer";
   public static final String CUSTOMER_PARTS = "customer_parts";
+  public static final String CUSTOMER_DUP_PARTS = "customer_dup_parts";
   public static final String NATION = "nation";
   public static final String PART = "part";
   public static final String REGION = "region";
@@ -59,6 +60,7 @@ public class TPCH extends BenchmarkSet {
     tableVolumes.put(LINEITEM, 759863287L);
     tableVolumes.put(CUSTOMER, 24346144L);
     tableVolumes.put(CUSTOMER_PARTS, 707L);
+    tableVolumes.put(CUSTOMER_DUP_PARTS, 707L);
     tableVolumes.put(NATION, 2224L);
     tableVolumes.put(PART, 24135125L);
     tableVolumes.put(REGION, 389L);
@@ -102,6 +104,17 @@ public class TPCH extends BenchmarkSet {
         .addColumn("c_mktsegment", Type.TEXT) // 6
         .addColumn("c_comment", Type.TEXT); // 7
     schemas.put(CUSTOMER, customer);
+
+    Schema customerDupParts = new Schema()
+        .addColumn("c_custkey", Type.INT4) // 0
+        .addColumn("c_name", Type.TEXT) // 1
+        .addColumn("c_address", Type.TEXT) // 2
+        .addColumn("c_nationkey", Type.INT4) // 3
+        .addColumn("c_phone", Type.TEXT) // 4
+        .addColumn("c_acctbal", Type.FLOAT8) // 5
+        .addColumn("c_mktsegment", Type.TEXT) // 6
+        .addColumn("c_comment", Type.TEXT); // 7
+    schemas.put(CUSTOMER_DUP_PARTS, customerDupParts);
 
     Schema customerParts = new Schema()
         .addColumn("c_custkey", Type.INT4) // 0
@@ -193,6 +206,7 @@ public class TPCH extends BenchmarkSet {
     loadTable(LINEITEM);
     loadTable(CUSTOMER);
     loadTable(CUSTOMER_PARTS);
+    loadTable(CUSTOMER_DUP_PARTS);
     loadTable(NATION);
     loadTable(PART);
     loadTable(REGION);
@@ -214,6 +228,16 @@ public class TPCH extends BenchmarkSet {
       partitionMethodDesc = new PartitionMethodDesc(
           tajo.getCurrentDatabase(),
           CUSTOMER_PARTS,
+          CatalogProtos.PartitionType.COLUMN,
+          "c_nationkey",
+          expressionSchema);
+    }
+    if (tableName.equals(CUSTOMER_DUP_PARTS)) {
+      Schema expressionSchema = new Schema();
+      expressionSchema.addColumn("c_nationkey", TajoDataTypes.Type.INT4);
+      partitionMethodDesc = new PartitionMethodDesc(
+          tajo.getCurrentDatabase(),
+          CUSTOMER_DUP_PARTS,
           CatalogProtos.PartitionType.COLUMN,
           "c_nationkey",
           expressionSchema);

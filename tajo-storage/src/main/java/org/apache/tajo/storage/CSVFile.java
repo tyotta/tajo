@@ -268,6 +268,9 @@ public class CSVFile {
           meta.getOption(StorageConstants.TEXT_DELIMITER,
           meta.getOption(StorageConstants.CSVFILE_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER))).charAt(0);
 
+      //Header Line Count
+      this.headerLineCount = Integer.parseInt(meta.getOption(StorageConstants.CSVFILE_HEADERLINE_COUNT, StorageConstants.DEFAULT_CSVFILE_HEADERLINE_COUNT));
+
       String nullCharacters = StringEscapeUtils.unescapeJava(
           meta.getOption(StorageConstants.TEXT_NULL,
           meta.getOption(StorageConstants.CSVFILE_NULL, NullDatum.DEFAULT_TEXT)));
@@ -300,6 +303,7 @@ public class CSVFile {
     private ArrayList<Integer> startOffsets;
     private NonSyncByteArrayOutputStream buffer;
     private SerializerDeserializer serde;
+    private final int headerLineCount;
 
     @Override
     public void init() throws IOException {
@@ -370,6 +374,12 @@ public class CSVFile {
 
       if (startOffset != 0) {
         pos += reader.readLine(new Text(), 0, maxBytesToConsume(pos));
+      } else {
+        // skip header lines for the first fragment of the file
+        Text dummy = new Text();
+        for (int i = 0; i < headerLineCount; i++) {
+          pos += reader.readLine(dummy, 0, maxBytesToConsume(pos));
+        }
       }
       eof = false;
       page();

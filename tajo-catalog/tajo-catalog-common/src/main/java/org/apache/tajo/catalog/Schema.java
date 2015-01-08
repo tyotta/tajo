@@ -112,6 +112,38 @@ public class Schema implements ProtoObject<SchemaProto>, Cloneable, GsonObject {
       addColumn(newColumn);
     }
   }
+
+  public void setQualifierReplaceIfDuplicated(String qualifier, int PartitionColumnIndex) {
+    Schema copy = null;
+    try {
+      copy = (Schema) clone();
+    } catch (CloneNotSupportedException e) {
+      throw new RuntimeException(e);
+    }
+
+    fields.clear();
+    fieldsByQualifiedName.clear();
+    fieldsByName.clear();
+
+    Column newColumn;
+    for (int i = 0; i < copy.size(); i++) {
+      Column column = copy.getColumn(i);
+      String QName = qualifier + "." + column.getSimpleName();
+      boolean isDuplicated = false;
+      for (int j = Math.max(i + 1, PartitionColumnIndex); j < copy.size(); j++) {
+        Column partitionColumn = copy.getColumn(j);
+        String QPName = qualifier + "." + partitionColumn.getSimpleName();
+        if (QName.equals(QPName)) {
+          isDuplicated = true;
+          break;
+        }
+      }
+      if (!isDuplicated) {
+        newColumn = new Column(QName, column.getDataType());
+        addColumn(newColumn);
+      }
+    }
+  }
 	
 	public int size() {
 		return this.fields.size();

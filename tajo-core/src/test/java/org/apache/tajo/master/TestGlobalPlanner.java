@@ -81,10 +81,10 @@ public class TestGlobalPlanner {
 
     // TPC-H Schema for Complex Queries
     String [] tables = {
-        "part", "supplier", "partsupp", "nation", "region", "lineitem", "orders", "customer", "customer_parts"
+        "part", "supplier", "partsupp", "nation", "region", "lineitem", "orders", "customer", "customer_parts", "customer_dup_parts"
     };
     int [] volumes = {
-        100, 200, 50, 5, 5, 800, 300, 100, 707
+        100, 200, 50, 5, 5, 800, 300, 100, 707, 707
     };
     tpch = new TPCH();
     tpch.loadSchemas();
@@ -99,6 +99,18 @@ public class TestGlobalPlanner {
       d.setStats(stats);
 
       if (tables[i].equals(TPCH.CUSTOMER_PARTS)) {
+        Schema expressionSchema = new Schema();
+        expressionSchema.addColumn("c_nationkey", TajoDataTypes.Type.INT4);
+        PartitionMethodDesc partitionMethodDesc = new PartitionMethodDesc(
+            DEFAULT_DATABASE_NAME,
+            tables[i],
+            CatalogProtos.PartitionType.COLUMN,
+            "c_nationkey",
+            expressionSchema);
+
+        d.setPartitionMethod(partitionMethodDesc);
+      }
+      if (tables[i].equals(TPCH.CUSTOMER_DUP_PARTS)) {
         Schema expressionSchema = new Schema();
         expressionSchema.addColumn("c_nationkey", TajoDataTypes.Type.INT4);
         PartitionMethodDesc partitionMethodDesc = new PartitionMethodDesc(
@@ -303,6 +315,11 @@ public class TestGlobalPlanner {
   @Test
   public void testTPCH_Q5() throws Exception {
     buildPlan(FileUtil.readTextFile(new File("benchmark/tpch/q5.sql")));
+  }
+
+  @Test
+  public void testCheckIfSimpleQueryWithDupColumn() throws Exception {
+    MasterPlan plan = buildPlan("select * from customer_dup_parts");
   }
 
   @Test

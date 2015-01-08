@@ -1,0 +1,1 @@
+CREATE EXTERNAL TABLE tableWithHeader (id int, str text, num int) using csv with('csvfile.headerLineCount'='1') location ${table.path};
