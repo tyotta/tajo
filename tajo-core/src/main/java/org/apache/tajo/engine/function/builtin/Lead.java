@@ -25,48 +25,55 @@ import org.apache.tajo.plan.function.AggFunction;
 import org.apache.tajo.plan.function.FunctionContext;
 import org.apache.tajo.storage.Tuple;
 
+import java.util.LinkedList;
 
-public abstract class LastValue extends AggFunction<Datum> {
+public abstract class Lead extends AggFunction<Datum> {
 
-  public LastValue(Column[] columns) {
+  public Lead(Column[] columns) {
     super(columns);
   }
 
   @Override
   public FunctionContext newContext() {
-    return new LastValueContext();
+    return new LeadContext();
   }
 
   @Override
   public void eval(FunctionContext ctx, Tuple params) {
-    LastValueContext lastValueCtx = (LastValueContext) ctx;
-    Datum datum = params.get(0);
-    if ( datum.isNotNull() ) {
-      lastValueCtx.last = datum;
+    LeadContext leadCtx = (LeadContext)ctx;
+    if (leadCtx.leadNum < 0) {
+      leadCtx.leadNum = params.get(1).asInt4();
+    }
+
+    if (leadCtx.leadNum > 0) {
+      leadCtx.leadNum --;
+    } else {
+      leadCtx.leadBuffer.add(params.get(0));
     }
   }
 
   @Override
   public Datum getPartialResult(FunctionContext ctx) {
-    if (((LastValueContext) ctx).last == null) {
+    LeadContext leadCtx = (LeadContext)ctx;
+    if (leadCtx.leadBuffer.isEmpty()) {
       return NullDatum.get();
-    }
-    else {
-      return ((LastValueContext) ctx).last;
+    } else {
+      return leadCtx.leadBuffer.removeFirst();
     }
   }
 
   @Override
   public Datum terminate(FunctionContext ctx) {
-    if (((LastValueContext) ctx).last == null) {
+    LeadContext leadCtx = (LeadContext)ctx;
+    if (leadCtx.leadBuffer.isEmpty()) {
       return NullDatum.get();
-    }
-    else {
-      return ((LastValueContext) ctx).last;
+    } else {
+      return leadCtx.leadBuffer.removeFirst();
     }
   }
 
-  private class LastValueContext implements FunctionContext {
-    Datum last = null;
+  private class LeadContext implements FunctionContext {
+    LinkedList<Datum> leadBuffer = new LinkedList<Datum>();
+    int leadNum = -1;
   }
 }

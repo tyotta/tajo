@@ -19,7 +19,6 @@
 package org.apache.tajo.engine.function.window;
 
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.tajo.catalog.Column;
 import org.apache.tajo.datum.Datum;
 import org.apache.tajo.datum.NullDatum;
