@@ -50,6 +50,13 @@ public class TestCreateTable extends QueryTestCaseBase {
   }
 
   @Test
+  public final void testCreateTableWithCase() throws Exception {
+    List<String> createdNames;
+    createdNames = executeDDL("create_table_with_case.sql", null);
+    assertTableExists(createdNames.get(0));
+  }
+
+  @Test
   public final void testCreateTable1() throws Exception {
     List<String> createdNames = executeDDL("table1_ddl.sql", "table1", "table1");
     assertTableExists(createdNames.get(0));
