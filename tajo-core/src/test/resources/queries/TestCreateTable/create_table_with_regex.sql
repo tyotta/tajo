@@ -1,0 +1,1 @@
+CREATE EXTERNAL TABLE tableWithRegex (id text, str text, other text) using csv with('csvfile.regexDelimiter'=';;') location ${table.path};
