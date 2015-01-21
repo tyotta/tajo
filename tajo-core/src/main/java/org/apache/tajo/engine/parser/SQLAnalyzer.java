@@ -24,6 +24,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.tajo.algebra.*;
 import org.apache.tajo.algebra.Aggregation.GroupType;
 import org.apache.tajo.algebra.LiteralValue.LiteralType;
@@ -1522,6 +1523,8 @@ public class SQLAnalyzer extends SQLParserBaseVisitor<Expr> {
         params.put(StorageConstants.TEXT_NULL, entry.getValue());
       } else if(entry.getKey().equals(StorageConstants.CSVFILE_HEADERLINE_COUNT)) {
         params.put(StorageConstants.CSVFILE_HEADERLINE_COUNT, entry.getValue());
+      } else if(entry.getKey().equals(StorageConstants.CSVFILE_REGEXDELIMITER)) {
+        params.put(StorageConstants.CSVFILE_REGEXDELIMITER, StringEscapeUtils.unescapeJava(entry.getValue()));
       } else {
         params.put(entry.getKey(), entry.getValue());
       }

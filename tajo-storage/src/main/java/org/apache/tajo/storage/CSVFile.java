@@ -62,6 +62,7 @@ public class CSVFile {
     private DataOutputStream outputStream;
     private CompressionOutputStream deflateFilter;
     private char delimiter;
+    private String regexDelimiter;
     private TableStatistics stats = null;
     private Compressor compressor;
     private CompressionCodecFactory codecFactory;
@@ -81,8 +82,7 @@ public class CSVFile {
       this.fs = path.getFileSystem(conf);
       this.meta = meta;
       this.schema = schema;
-      this.delimiter = StringEscapeUtils.unescapeJava(
-          this.meta.getOption(StorageConstants.TEXT_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER)).charAt(0);
+      this.delimiter = StringEscapeUtils.unescapeJava(meta.getOption(StorageConstants.TEXT_DELIMITER, meta.getOption(StorageConstants.CSVFILE_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER))).charAt(0);
 
       this.columnNum = schema.size();
 
@@ -271,6 +271,12 @@ public class CSVFile {
       //Header Line Count
       this.headerLineCount = Integer.parseInt(meta.getOption(StorageConstants.CSVFILE_HEADERLINE_COUNT, StorageConstants.DEFAULT_CSVFILE_HEADERLINE_COUNT));
 
+      //Regular Expression Delimiter
+      this.regexDelimiter = meta.getOption(StorageConstants.CSVFILE_REGEXDELIMITER, StorageConstants.DEFAULT_CSVFILE_REGEXDELIMITER);
+      if(this.regexDelimiter.equals("")) {
+        this.regexDelimiter = null;
+      }
+
       String nullCharacters = StringEscapeUtils.unescapeJava(
           meta.getOption(StorageConstants.TEXT_NULL,
           meta.getOption(StorageConstants.CSVFILE_NULL, NullDatum.DEFAULT_TEXT)));
@@ -284,6 +290,7 @@ public class CSVFile {
 
     private final static int DEFAULT_PAGE_SIZE = 256 * 1024;
     private char delimiter;
+    private String regexDelimiter;
     private FileSystem fs;
     private FSDataInputStream fis;
     private InputStream is; //decompressd stream
@@ -486,8 +493,20 @@ public class CSVFile {
           offset = fileOffsets.get(currentIdx);
         }
 
-        byte[][] cells = BytesUtils.splitPreserveAllTokens(buffer.getData(), startOffsets.get(currentIdx),
-            rowLengthList.get(currentIdx), delimiter, targetColumnIndexes);
+        byte[][] cells = null;
+        if (regexDelimiter != null) {
+          String rowString = new String(buffer.getData(), startOffsets.get(currentIdx), rowLengthList.get(currentIdx), "ISO8859-1");
+          String[] result = new String(rowString).split(new String(regexDelimiter));
+          cells = new byte[result.length][];
+          for(int i = 0; i < targetColumnIndexes.length; i++){
+            if(targetColumnIndexes[i] < result.length) {
+              cells[targetColumnIndexes[i]] = result[targetColumnIndexes[i]].getBytes();
+            }
+          }
+        } else {
+          cells = BytesUtils.splitPreserveAllTokens(buffer.getData(), startOffsets.get(currentIdx),
+              rowLengthList.get(currentIdx), delimiter, targetColumnIndexes);
+        }
         currentIdx++;
         return new LazyTuple(schema, cells, offset, nullChars, serde);
       } catch (Throwable t) {
