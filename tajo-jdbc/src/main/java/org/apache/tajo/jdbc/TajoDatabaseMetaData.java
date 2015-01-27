@@ -381,19 +381,21 @@ public class TajoDatabaseMetaData implements DatabaseMetaData {
       }
 
       for (String databaseName : targetCatalogs) {
-        List<String> tableNames = catalogAdmin.getTableList(databaseName);
-        for (String eachTableName: tableNames) {
-          if (eachTableName.matches(regtableNamePattern)) {
-            MetaDataTuple tuple = new MetaDataTuple(5);
+        if(databaseName != null && databaseName.length() > 0) {
+          List<String> tableNames = catalogAdmin.getTableList(databaseName);
+          for (String eachTableName : tableNames) {
+            if (eachTableName.matches(regtableNamePattern)) {
+              MetaDataTuple tuple = new MetaDataTuple(5);
 
-            int index = 0;
-            tuple.put(index++, new TextDatum(databaseName));         // TABLE_CAT
-            tuple.put(index++, new TextDatum(DEFAULT_SCHEMA_NAME));   // TABLE_SCHEM
-            tuple.put(index++, new TextDatum(eachTableName));         // TABLE_NAME
-            tuple.put(index++, new TextDatum("TABLE"));               // TABLE_TYPE
-            tuple.put(index++, NullDatum.get());                      // REMARKS
+              int index = 0;
+              tuple.put(index++, new TextDatum(databaseName));         // TABLE_CAT
+              tuple.put(index++, new TextDatum(DEFAULT_SCHEMA_NAME));   // TABLE_SCHEM
+              tuple.put(index++, new TextDatum(eachTableName));         // TABLE_NAME
+              tuple.put(index++, new TextDatum("TABLE"));               // TABLE_TYPE
+              tuple.put(index++, NullDatum.get());                      // REMARKS
 
-            resultTables.add(tuple);
+              resultTables.add(tuple);
+            }
           }
         }
       }
