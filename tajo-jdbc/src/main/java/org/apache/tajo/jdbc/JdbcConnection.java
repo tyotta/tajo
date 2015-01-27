@@ -383,7 +383,7 @@ public class JdbcConnection implements Connection {
 
   @Override
   public void setReadOnly(boolean readOnly) throws SQLException {
-    throw new SQLFeatureNotSupportedException("setReadOnly");
+//    throw new SQLFeatureNotSupportedException("setReadOnly");
   }
 
   @Override
