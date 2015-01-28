@@ -45,6 +45,8 @@ import org.apache.tajo.util.BytesUtils;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CSVFile {
 
@@ -277,6 +279,14 @@ public class CSVFile {
         this.regexDelimiter = null;
       }
 
+      //Regular Expression Row Format
+      this.regexFormatter = meta.getOption(StorageConstants.CSVFILE_REGEXFORMATTER, StorageConstants.DEFAULT_CSVFILE_REGEXFORMATTER);
+      if(this.regexFormatter.equals("")) {
+        this.regexFormatter = null;
+      } else {
+        this.regexPattern = Pattern.compile(regexFormatter);
+      }
+
       String nullCharacters = StringEscapeUtils.unescapeJava(
           meta.getOption(StorageConstants.TEXT_NULL,
           meta.getOption(StorageConstants.CSVFILE_NULL, NullDatum.DEFAULT_TEXT)));
@@ -291,6 +301,8 @@ public class CSVFile {
     private final static int DEFAULT_PAGE_SIZE = 256 * 1024;
     private char delimiter;
     private String regexDelimiter;
+    private String regexFormatter;
+    private Pattern regexPattern;
     private FileSystem fs;
     private FSDataInputStream fis;
     private InputStream is; //decompressd stream
@@ -494,7 +506,21 @@ public class CSVFile {
         }
 
         byte[][] cells = null;
-        if (regexDelimiter != null) {
+        if (regexFormatter != null) {
+          String rowString = new String(buffer.getData(), startOffsets.get(currentIdx), rowLengthList.get(currentIdx), "ISO8859-1");
+          Matcher m = regexPattern.matcher(rowString);
+          if (m.matches()) {
+            cells = new byte[m.groupCount()][];
+            for(int i = 0; i < targetColumnIndexes.length; i++){
+              if(targetColumnIndexes[i] < m.groupCount()) {
+                cells[targetColumnIndexes[i]] = m.group(targetColumnIndexes[i]+1).getBytes();
+              }
+            }
+          } else {
+            LOG.error("format ("+regexFormatter+") is not fit in stored data");
+            throw new IOException();
+          }
+        } else if (regexDelimiter != null) {
           String rowString = new String(buffer.getData(), startOffsets.get(currentIdx), rowLengthList.get(currentIdx), "ISO8859-1");
           String[] result = new String(rowString).split(new String(regexDelimiter));
           cells = new byte[result.length][];
