@@ -1525,6 +1525,8 @@ public class SQLAnalyzer extends SQLParserBaseVisitor<Expr> {
         params.put(StorageConstants.CSVFILE_HEADERLINE_COUNT, entry.getValue());
       } else if(entry.getKey().equals(StorageConstants.CSVFILE_REGEXDELIMITER)) {
         params.put(StorageConstants.CSVFILE_REGEXDELIMITER, StringEscapeUtils.unescapeJava(entry.getValue()));
+      } else if(entry.getKey().equals(StorageConstants.CSVFILE_REGEXFORMATTER)) {
+        params.put(StorageConstants.CSVFILE_REGEXFORMATTER, StringEscapeUtils.unescapeJava(entry.getValue()));
       } else {
         params.put(entry.getKey(), entry.getValue());
       }

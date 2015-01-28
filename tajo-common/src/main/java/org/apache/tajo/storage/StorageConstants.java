@@ -28,6 +28,8 @@ public class StorageConstants {
   @Deprecated
   public static final String CSVFILE_REGEXDELIMITER = "csvfile.regexDelimiter";
   @Deprecated
+  public static final String CSVFILE_REGEXFORMATTER = "csvfile.regexFormatter";
+  @Deprecated
   public static final String CSVFILE_NULL = "csvfile.null";
   @Deprecated
   public static final String CSVFILE_HEADERLINE_COUNT = "csvfile.headerLineCount";
@@ -54,6 +56,7 @@ public class StorageConstants {
 
   public static final String DEFAULT_CSVFILE_HEADERLINE_COUNT = "0";
   public static final String DEFAULT_CSVFILE_REGEXDELIMITER = "";
+  public static final String DEFAULT_CSVFILE_REGEXFORMATTER = "";
 
   public static final String PARQUET_DEFAULT_BLOCK_SIZE;
   public static final String PARQUET_DEFAULT_PAGE_SIZE;
