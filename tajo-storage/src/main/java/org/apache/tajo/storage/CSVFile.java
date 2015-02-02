@@ -64,6 +64,8 @@ public class CSVFile {
     private DataOutputStream outputStream;
     private CompressionOutputStream deflateFilter;
     private char delimiter;
+    private byte[] lineDelimiter;
+    private int lineDelimiterSize;
     private String regexDelimiter;
     private TableStatistics stats = null;
     private Compressor compressor;
@@ -102,6 +104,17 @@ public class CSVFile {
     public void init() throws IOException {
       if (!fs.exists(path.getParent())) {
         throw new FileNotFoundException(path.toString());
+      }
+
+      // support Custom Line Delimiter
+      String StringLineDelimiter = meta.getOption(StorageConstants.CSVFILE_LINEDELIMITER, StorageConstants.DEFAULT_CSVFILE_LINEDELIMITER);
+      if("".equals(StringLineDelimiter)) {
+        lineDelimiter = new byte[1];
+        lineDelimiter[0] = LF;
+        lineDelimiterSize = 1;
+      } else {
+        lineDelimiter = StringLineDelimiter.getBytes();
+        lineDelimiterSize = lineDelimiter.length;
       }
 
       //determine the intermediate file type
@@ -178,8 +191,8 @@ public class CSVFile {
           stats.analyzeField(i, datum);
         }
       }
-      os.write(LF);
-      rowBytes += 1;
+      os.write(lineDelimiter);
+      rowBytes += lineDelimiterSize;
 
       pos += rowBytes;
       bufferedBytes += rowBytes;
@@ -300,6 +313,7 @@ public class CSVFile {
 
     private final static int DEFAULT_PAGE_SIZE = 256 * 1024;
     private char delimiter;
+    private String lineDelimiter;
     private String regexDelimiter;
     private String regexFormatter;
     private Pattern regexPattern;
@@ -341,6 +355,13 @@ public class CSVFile {
       pos = startOffset = fragment.getStartKey();
       end = startOffset + fragment.getEndKey();
 
+      // support Custom Line Delimiter
+      byte[] bytesLineDelimiter = null;
+      lineDelimiter = meta.getOption(StorageConstants.CSVFILE_LINEDELIMITER, StorageConstants.DEFAULT_CSVFILE_LINEDELIMITER);
+      if(!("".equals(lineDelimiter))) {
+        bytesLineDelimiter = lineDelimiter.getBytes();
+      }
+
       if (codec != null) {
         decompressor = CodecPool.getDecompressor(codec);
         if (codec instanceof SplittableCompressionCodec) {
@@ -348,21 +369,21 @@ public class CSVFile {
               fis, decompressor, startOffset, end,
               SplittableCompressionCodec.READ_MODE.BYBLOCK);
 
-          reader = new CompressedSplitLineReader(cIn, conf, null);
+          reader = new CompressedSplitLineReader(cIn, conf, bytesLineDelimiter);
           startOffset = cIn.getAdjustedStart();
           end = cIn.getAdjustedEnd();
           filePosition = cIn;
           is = cIn;
         } else {
           is = new DataInputStream(codec.createInputStream(fis, decompressor));
-          reader = new SplitLineReader(is, null);
+          reader = new SplitLineReader(is, bytesLineDelimiter);
           filePosition = fis;
         }
       } else {
         fis.seek(startOffset);
         filePosition = fis;
         is = fis;
-        reader = new SplitLineReader(is, null);
+        reader = new SplitLineReader(is, bytesLineDelimiter);
       }
 
       if (targets == null) {
@@ -440,7 +461,7 @@ public class CSVFile {
 
       while (DEFAULT_PAGE_SIZE >= bufferedSize){
 
-        int ret = reader.readDefaultLine(buffer, rowLengthList, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        int ret = reader.readLine(buffer, rowLengthList, Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         if(ret == 0){
           break;

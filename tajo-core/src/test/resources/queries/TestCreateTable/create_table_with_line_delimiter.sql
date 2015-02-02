@@ -1,0 +1,1 @@
+CREATE EXTERNAL TABLE tableWithLineDelimiter (id int, str text, other text) using csv with('csvfile.lineDelimiter'=';') location ${table.path};

@@ -292,6 +292,21 @@ public class TestCreateTable extends QueryTestCaseBase {
   }
 
   @Test
+  public final void testTableWithLineDelimiter() throws Exception {
+    List<String> tableNames = null;
+    tableNames = executeDDL("create_table_with_line_delimiter.sql", "tableWithLineDelimiter");
+    assertTableExists(tableNames.get(0));
+    ResultSet res = null;
+    try {
+      res = executeFile("table_with_line_delimiter.sql");
+      assertResultSet(res, "table_with_line_delimiter.result");
+    } finally {
+      cleanupQuery(res);
+    }
+    executeString("drop table " + tableNames.get(0)).close();
+  }
+
+  @Test
   public final void testNonreservedKeywordTableNames() throws Exception {
     List<String> createdNames = null;
     createdNames = executeDDL("table1_ddl.sql", "table1", "filter");
