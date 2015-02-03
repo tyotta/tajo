@@ -1,1 +1,1 @@
-select id, other from tableWithLineDelimiter;
+select id, other from tableWithLineDelimiter group by id, other;
