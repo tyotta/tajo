@@ -51,6 +51,7 @@ import org.apache.tajo.master.event.*;
 import org.apache.tajo.storage.StorageManager;
 import org.apache.tajo.storage.StorageConstants;
 import org.apache.tajo.storage.StorageUtil;
+import org.apache.tajo.util.KeyValueSet;
 import org.apache.tajo.util.TUtil;
 import org.apache.tajo.util.history.QueryHistory;
 import org.apache.tajo.util.history.SubQueryHistory;
@@ -900,7 +901,7 @@ public class Query implements EventHandler<QueryEvent> {
       return !query.getPlan().isTerminal(nextBlock);
     }
 
-    private void executeNextBlock(Query query) {
+    private void executeNextBlock(Query query, KeyValueSet options) {
       ExecutionBlockCursor cursor = query.getExecutionBlockCursor();
       ExecutionBlock nextBlock = cursor.nextBlock();
       SubQuery nextSubQuery = new SubQuery(query.context, query.getPlan(), nextBlock, query.sm);
@@ -940,7 +941,8 @@ public class Query implements EventHandler<QueryEvent> {
             query.getSynchronizedState() == QueryState.QUERY_RUNNING &&     // current state is not in KILL_WAIT, FAILED, or ERROR.
             hasNext(query)) {                                   // there remains at least one subquery.
           query.getSubQuery(castEvent.getExecutionBlockId()).waitingIntermediateReport();
-          executeNextBlock(query);
+          KeyValueSet options = query.getSubQuery(castEvent.getExecutionBlockId()).getTableMeta().getOptions();
+          executeNextBlock(query, options);
         } else { // if a query is completed due to finished, kill, failure, or error
           query.eventHandler.handle(new QueryCompletedEvent(castEvent.getExecutionBlockId(), castEvent.getState()));
         }
