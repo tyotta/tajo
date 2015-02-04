@@ -397,7 +397,7 @@ public class Query implements EventHandler<QueryEvent> {
 
       query.setStartTime();
       SubQuery subQuery = new SubQuery(query.context, query.getPlan(),
-          query.getExecutionBlockCursor().nextBlock(), query.sm);
+          query.getExecutionBlockCursor().nextBlock(), query.sm, new KeyValueSet());
       subQuery.setPriority(query.priority--);
       query.addSubQuery(subQuery);
 
@@ -904,7 +904,7 @@ public class Query implements EventHandler<QueryEvent> {
     private void executeNextBlock(Query query, KeyValueSet options) {
       ExecutionBlockCursor cursor = query.getExecutionBlockCursor();
       ExecutionBlock nextBlock = cursor.nextBlock();
-      SubQuery nextSubQuery = new SubQuery(query.context, query.getPlan(), nextBlock, query.sm);
+      SubQuery nextSubQuery = new SubQuery(query.context, query.getPlan(), nextBlock, query.sm, options);
       nextSubQuery.setPriority(query.priority--);
       query.addSubQuery(nextSubQuery);
       nextSubQuery.handle(new SubQueryEvent(nextSubQuery.getId(), SubQueryEventType.SQ_INIT));

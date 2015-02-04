@@ -766,6 +766,13 @@ public class PhysicalPlannerImpl implements PhysicalPlanner {
    */
   public PhysicalExec createShuffleFileWritePlan(TaskAttemptContext ctx,
                                                  ShuffleFileWriteNode plan, PhysicalExec subOp) throws IOException {
+    // inherit all the meta options from scanning tables
+    LogicalNode[] scanNodes = PlannerUtil.findAllNodes(plan, NodeType.SCAN);
+    for (LogicalNode scanNode: scanNodes) {
+      KeyValueSet options = ((ScanNode)scanNode).getTableDesc().getMeta().getOptions();
+      plan.getOptions().putAll(options);
+    }
+
     switch (plan.getShuffleType()) {
     case HASH_SHUFFLE:
     case SCATTERED_HASH_SHUFFLE:
@@ -789,13 +796,6 @@ public class PhysicalPlannerImpl implements PhysicalPlanner {
     case NONE_SHUFFLE:
       // if there is no given NULL CHAR property in the table property and the query is neither CTAS or INSERT,
       // we set DEFAULT NULL CHAR to the table property.
-
-      // inherit all the meta options from scanning tables
-      LogicalNode[] scanNodes = PlannerUtil.findAllNodes(plan, NodeType.SCAN);
-      for (LogicalNode scanNode: scanNodes) {
-        KeyValueSet options = ((ScanNode)scanNode).getTableDesc().getMeta().getOptions();
-        plan.getOptions().putAll(options);
-      }
 
       if (!ctx.getQueryContext().containsKey(SessionVars.NULL_CHAR)) {
         plan.getOptions().set(StorageConstants.TEXT_NULL, TajoConf.ConfVars.$TEXT_NULL.defaultVal);

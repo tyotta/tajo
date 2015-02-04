@@ -23,7 +23,14 @@ import org.apache.tajo.ExecutionBlockId;
 import org.apache.tajo.catalog.Column;
 import org.apache.tajo.catalog.Schema;
 import org.apache.tajo.catalog.SchemaUtil;
+import org.apache.tajo.plan.logical.LogicalNode;
+import org.apache.tajo.plan.logical.NodeType;
+import org.apache.tajo.plan.logical.ScanNode;
+import org.apache.tajo.plan.util.PlannerUtil;
+import org.apache.tajo.util.KeyValueSet;
 import org.apache.tajo.util.TUtil;
+
+import javax.xml.crypto.Data;
 
 import static org.apache.tajo.catalog.proto.CatalogProtos.StoreType;
 import static org.apache.tajo.ipc.TajoWorkerProtocol.*;
@@ -37,6 +44,7 @@ public class DataChannel {
   private ShuffleType shuffleType;
   private Integer numOutputs = 1;
   private Column[] shuffleKeys;
+  private KeyValueSet options;
 
   private Schema schema;
 
@@ -47,13 +55,27 @@ public class DataChannel {
     this.targetId = targetId;
   }
 
+  public DataChannel(ExecutionBlock src, ExecutionBlock target) {
+    this(src.getId(), target.getId());
+    LogicalNode[] scanNodes = PlannerUtil.findAllNodes(src.getPlan(), NodeType.SCAN);
+    for (LogicalNode scanNode : scanNodes) {
+      addOptions(((ScanNode)scanNode).getTableDesc().getMeta().getOptions());
+    }
+  }
+
   public DataChannel(ExecutionBlockId srcId, ExecutionBlockId targetId, ShuffleType shuffleType) {
     this(srcId, targetId);
     this.shuffleType = shuffleType;
   }
 
+  public DataChannel(ExecutionBlock src, ExecutionBlock target, ShuffleType shuffleType) {
+    this(src, target);
+    this.shuffleType = shuffleType;
+  }
+
   public DataChannel(ExecutionBlock src, ExecutionBlock target, ShuffleType shuffleType, int numOutput) {
-    this(src.getId(), target.getId(), shuffleType, numOutput);
+    this(src, target, shuffleType);
+    this.numOutputs = numOutput;
     setSchema(src.getPlan().getOutSchema());
   }
 
@@ -84,6 +106,10 @@ public class DataChannel {
 
     if (proto.hasStoreType()) {
       this.storeType = proto.getStoreType();
+    }
+
+    if (proto.hasOptions()) {
+      this.setOptions(new KeyValueSet(proto.getOptions()));
     }
   }
 
@@ -152,6 +178,21 @@ public class DataChannel {
     return storeType;
   }
 
+  public void setOptions(KeyValueSet options) {
+    this.options = new KeyValueSet(options);
+  }
+
+  public void addOptions(KeyValueSet options) {
+    if (this.options == null) {
+      this.options = new KeyValueSet();
+    }
+    this.options.putAll(options);
+  }
+
+  public KeyValueSet getOptions() {
+    return options;
+  }
+
   public DataChannelProto getProto() {
     DataChannelProto.Builder builder = DataChannelProto.newBuilder();
     builder.setSrcId(srcId.getProto());
@@ -174,6 +215,10 @@ public class DataChannel {
 
     if(storeType != null){
       builder.setStoreType(storeType);
+    }
+
+    if(options != null) {
+      builder.setOptions(options.getProto());
     }
     return builder.build();
   }

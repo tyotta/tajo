@@ -686,7 +686,7 @@ public class SubQuery implements EventHandler<SubQueryEvent> {
       storeType = storeTableNode.getStorageType();
     }
 
-    KeyValueSet metaOptions = new KeyValueSet();
+    KeyValueSet metaOptions = new KeyValueSet(inheritOptions);
     LogicalNode[] scanNodes = PlannerUtil.findAllNodes(getBlock().getPlan(), NodeType.SCAN);
     for (LogicalNode scanNode: scanNodes) {
       KeyValueSet options = ((ScanNode)scanNode).getTableDesc().getMeta().getOptions();
