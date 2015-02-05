@@ -35,6 +35,7 @@ import org.apache.tajo.plan.logical.*;
 import org.apache.tajo.plan.visitor.BasicLogicalPlanVisitor;
 import org.apache.tajo.plan.visitor.ExplainLogicalPlanVisitor;
 import org.apache.tajo.plan.visitor.SimpleAlgebraVisitor;
+import org.apache.tajo.util.KeyValueSet;
 import org.apache.tajo.util.TUtil;
 
 import java.util.*;
@@ -120,6 +121,25 @@ public class PlannerUtil {
     return !checkIfDDLPlan(rootNode) &&
         (simpleOperator && noComplexComputation && isOneQueryBlock &&
             noOrderBy && noGroupBy && noWhere && noJoin && singleRelation);
+  }
+
+  public static KeyValueSet getScanOptions(LogicalNode plan) {
+    KeyValueSet metaOptions = new KeyValueSet();
+
+    if (plan != null) {
+      LogicalNode[] scanNodes = PlannerUtil.findAllNodes(plan, NodeType.SCAN);
+      for (LogicalNode scanNode: scanNodes) {
+        KeyValueSet options = ((ScanNode)scanNode).getTableDesc().getMeta().getOptions();
+        metaOptions.putAll(options);
+      }
+      // meta options valid only for leaf scanner are removed
+      // TODO - more nice manner needed
+      metaOptions.remove("csvfile.regexFormatter");
+      metaOptions.remove("csvfile.regexDelimiter");
+      metaOptions.remove("csvfile.headerLineCount");
+    }
+
+    return metaOptions;
   }
 
   /**

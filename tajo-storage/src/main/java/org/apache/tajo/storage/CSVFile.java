@@ -86,7 +86,7 @@ public class CSVFile {
       this.fs = path.getFileSystem(conf);
       this.meta = meta;
       this.schema = schema;
-      this.delimiter = StringEscapeUtils.unescapeJava(meta.getOption(StorageConstants.TEXT_DELIMITER, meta.getOption(StorageConstants.CSVFILE_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER))).charAt(0);
+      this.delimiter = StringEscapeUtils.unescapeJava(meta.getOption(StorageConstants.CSVFILE_DELIMITER, meta.getOption(StorageConstants.TEXT_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER))).charAt(0);
 
       this.columnNum = schema.size();
 
@@ -280,8 +280,8 @@ public class CSVFile {
 
       //Delimiter
       this.delimiter = StringEscapeUtils.unescapeJava(
-          meta.getOption(StorageConstants.TEXT_DELIMITER,
-          meta.getOption(StorageConstants.CSVFILE_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER))).charAt(0);
+          meta.getOption(StorageConstants.CSVFILE_DELIMITER,
+          meta.getOption(StorageConstants.TEXT_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER))).charAt(0);
 
       //Header Line Count
       this.headerLineCount = Integer.parseInt(meta.getOption(StorageConstants.CSVFILE_HEADERLINE_COUNT, StorageConstants.DEFAULT_CSVFILE_HEADERLINE_COUNT));

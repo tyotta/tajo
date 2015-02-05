@@ -57,10 +57,7 @@ public class DataChannel {
 
   public DataChannel(ExecutionBlock src, ExecutionBlock target) {
     this(src.getId(), target.getId());
-    LogicalNode[] scanNodes = PlannerUtil.findAllNodes(src.getPlan(), NodeType.SCAN);
-    for (LogicalNode scanNode : scanNodes) {
-      addOptions(((ScanNode)scanNode).getTableDesc().getMeta().getOptions());
-    }
+    this.options = PlannerUtil.getScanOptions(src.getPlan());
   }
 
   public DataChannel(ExecutionBlockId srcId, ExecutionBlockId targetId, ShuffleType shuffleType) {

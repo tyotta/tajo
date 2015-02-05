@@ -72,20 +72,14 @@ public class TajoConf extends Configuration {
 
   public TajoConf() {
     super();
-    set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-    set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
   }
 
   public TajoConf(Configuration conf) {
     super(conf);
-    set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-    set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
   }
 
   public TajoConf(Path path) {
     super();
-    set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-    set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
     addResource(path);
   }
 

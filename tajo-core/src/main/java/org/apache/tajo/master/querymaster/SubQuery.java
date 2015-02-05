@@ -684,12 +684,7 @@ public class SubQuery implements EventHandler<SubQueryEvent> {
       storeType = storeTableNode.getStorageType();
     }
 
-    KeyValueSet metaOptions = new KeyValueSet();
-    LogicalNode[] scanNodes = PlannerUtil.findAllNodes(getBlock().getPlan(), NodeType.SCAN);
-    for (LogicalNode scanNode: scanNodes) {
-      KeyValueSet options = ((ScanNode)scanNode).getTableDesc().getMeta().getOptions();
-      metaOptions.putAll(options);
-    }
+    KeyValueSet metaOptions = PlannerUtil.getScanOptions(getBlock().getPlan());
 
     schema = channel.getSchema();
     meta = CatalogUtil.newTableMeta(storeType, metaOptions);
