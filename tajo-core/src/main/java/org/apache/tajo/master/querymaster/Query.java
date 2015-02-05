@@ -397,7 +397,7 @@ public class Query implements EventHandler<QueryEvent> {
 
       query.setStartTime();
       SubQuery subQuery = new SubQuery(query.context, query.getPlan(),
-          query.getExecutionBlockCursor().nextBlock(), query.sm, new KeyValueSet());
+          query.getExecutionBlockCursor().nextBlock(), query.sm);
       subQuery.setPriority(query.priority--);
       query.addSubQuery(subQuery);
 
@@ -901,10 +901,10 @@ public class Query implements EventHandler<QueryEvent> {
       return !query.getPlan().isTerminal(nextBlock);
     }
 
-    private void executeNextBlock(Query query, KeyValueSet options) {
+    private void executeNextBlock(Query query) {
       ExecutionBlockCursor cursor = query.getExecutionBlockCursor();
       ExecutionBlock nextBlock = cursor.nextBlock();
-      SubQuery nextSubQuery = new SubQuery(query.context, query.getPlan(), nextBlock, query.sm, options);
+      SubQuery nextSubQuery = new SubQuery(query.context, query.getPlan(), nextBlock, query.sm);
       nextSubQuery.setPriority(query.priority--);
       query.addSubQuery(nextSubQuery);
       nextSubQuery.handle(new SubQueryEvent(nextSubQuery.getId(), SubQueryEventType.SQ_INIT));
@@ -941,8 +941,7 @@ public class Query implements EventHandler<QueryEvent> {
             query.getSynchronizedState() == QueryState.QUERY_RUNNING &&     // current state is not in KILL_WAIT, FAILED, or ERROR.
             hasNext(query)) {                                   // there remains at least one subquery.
           query.getSubQuery(castEvent.getExecutionBlockId()).waitingIntermediateReport();
-          KeyValueSet options = query.getSubQuery(castEvent.getExecutionBlockId()).getTableMeta().getOptions();
-          executeNextBlock(query, options);
+          executeNextBlock(query);
         } else { // if a query is completed due to finished, kill, failure, or error
           query.eventHandler.handle(new QueryCompletedEvent(castEvent.getExecutionBlockId(), castEvent.getState()));
         }

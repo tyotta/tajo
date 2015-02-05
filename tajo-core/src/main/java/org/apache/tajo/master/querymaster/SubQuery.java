@@ -92,7 +92,6 @@ public class SubQuery implements EventHandler<SubQueryEvent> {
   private int priority;
   private Schema schema;
   private TableMeta meta;
-  private KeyValueSet inheritOptions;
   private TableStats resultStatistics;
   private TableStats inputStatistics;
   private EventHandler<Event> eventHandler;
@@ -286,13 +285,12 @@ public class SubQuery implements EventHandler<SubQueryEvent> {
   private SubQueryHistory finalSubQueryHistory;
 
   public SubQuery(QueryMasterTask.QueryMasterTaskContext context, MasterPlan masterPlan,
-                  ExecutionBlock block, StorageManager sm, KeyValueSet options) {
+                  ExecutionBlock block, StorageManager sm) {
     this.context = context;
     this.masterPlan = masterPlan;
     this.block = block;
     this.sm = sm;
     this.eventHandler = context.getEventHandler();
-    this.inheritOptions = options;
 
     ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     this.readLock = readWriteLock.readLock();
@@ -686,7 +684,7 @@ public class SubQuery implements EventHandler<SubQueryEvent> {
       storeType = storeTableNode.getStorageType();
     }
 
-    KeyValueSet metaOptions = new KeyValueSet(inheritOptions);
+    KeyValueSet metaOptions = new KeyValueSet();
     LogicalNode[] scanNodes = PlannerUtil.findAllNodes(getBlock().getPlan(), NodeType.SCAN);
     for (LogicalNode scanNode: scanNodes) {
       KeyValueSet options = ((ScanNode)scanNode).getTableDesc().getMeta().getOptions();
