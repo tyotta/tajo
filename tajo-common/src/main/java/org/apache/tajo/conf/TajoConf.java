@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.tajo.ConfigKey;
 import org.apache.tajo.SessionVars;
@@ -61,7 +62,7 @@ public class TajoConf extends Configuration {
     Configuration.addDefaultResource("tajo-site.xml");
 
     confStaticInit();
-    
+
     for (ConfVars confVars: ConfVars.values()) {
       vars.put(confVars.keyname(), confVars);
     }
@@ -71,14 +72,20 @@ public class TajoConf extends Configuration {
 
   public TajoConf() {
     super();
+    set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+    set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
   }
 
   public TajoConf(Configuration conf) {
     super(conf);
+    set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+    set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
   }
 
   public TajoConf(Path path) {
     super();
+    set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+    set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
     addResource(path);
   }
 
