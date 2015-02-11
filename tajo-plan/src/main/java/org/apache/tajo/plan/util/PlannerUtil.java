@@ -88,18 +88,8 @@ public class PlannerUtil {
         scanNode = plan.getRootBlock().getNode(NodeType.PARTITIONS_SCAN);
       }
       if (scanNode.hasTargets()) {
-        // If the number of columns in the select clause is s different from table schema,
-        // This query is not a simple query.
-        if (scanNode.getTableDesc().hasPartition()) {
-          // In the case of partitioned table, the actual number of columns is ScanNode.InSchema + partitioned columns
-          int numPartitionColumns = scanNode.getTableDesc().getPartitionMethod().getExpressionSchema().size();
-          if (scanNode.getTargets().length != scanNode.getInSchema().size() + numPartitionColumns) {
-            return false;
-          }
-        } else {
-          if (scanNode.getTargets().length != scanNode.getInSchema().size()) {
-            return false;
-          }
+        if (scanNode.getTargets().length != scanNode.getTableDesc().getLogicalSchema().size()) {
+          return false;
         }
         noComplexComputation = true;
         for (int i = 0; i < scanNode.getTargets().length; i++) {
