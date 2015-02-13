@@ -1211,7 +1211,8 @@ public class LogicalPlanner extends BaseAlgebraVisitor<LogicalPlanner.PlanContex
       NamedExpr namedExpr = it.next();
       try {
         evalNode = exprAnnotator.createEvalNode(context, namedExpr.getExpr(), NameResolvingMode.LEGACY);
-        if (EvalTreeUtil.findDistinctAggFunction(evalNode).size() == 0) {
+        if (EvalTreeUtil.findDistinctAggFunction(evalNode).size() == 0 
+            && EvalTreeUtil.findWindowFunction(evalNode).size() == 0) {
           block.namedExprsMgr.markAsEvaluated(namedExpr.getAlias(), evalNode);
           newlyEvaluatedExprs.add(namedExpr.getAlias());
         }
