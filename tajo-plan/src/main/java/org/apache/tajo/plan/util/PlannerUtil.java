@@ -27,6 +27,7 @@ import org.apache.tajo.catalog.Column;
 import org.apache.tajo.catalog.Schema;
 import org.apache.tajo.catalog.SchemaUtil;
 import org.apache.tajo.catalog.SortSpec;
+import org.apache.tajo.catalog.partition.PartitionMethodDesc;
 import org.apache.tajo.catalog.proto.CatalogProtos;
 import org.apache.tajo.common.TajoDataTypes.DataType;
 import org.apache.tajo.plan.*;
@@ -57,6 +58,36 @@ public class PlannerUtil {
             baseNode.getType() == NodeType.ALTER_TABLESPACE ||
             baseNode.getType() == NodeType.ALTER_TABLE ||
             baseNode.getType() == NodeType.TRUNCATE_TABLE;
+  }
+
+  public static boolean checkIfPartitionDistinctSortQuery(LogicalPlan plan) {
+    LogicalRootNode rootNode = plan.getRootBlock().getRoot();
+
+    if (rootNode.getChild().getType() == NodeType.SORT) {
+      SortNode sortNode = rootNode.getChild();
+      if (sortNode.getChild().getType() == NodeType.GROUP_BY) {
+        GroupbyNode groupbyNode = sortNode.getChild();
+        if (groupbyNode.getChild().getType() == NodeType.PARTITIONS_SCAN) {
+          PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
+          if (groupbyNode.getGroupingColumns().length == 1) {
+            Column column = groupbyNode.getGroupingColumns()[0];
+            if (partitionedTableScanNode.getTableDesc().hasPartition()) {
+              PartitionMethodDesc partitionMethodDesc = partitionedTableScanNode.getTableDesc().getPartitionMethod();
+              if (partitionMethodDesc.getExpressionSchema().getColumn(column.getSimpleName()) == null) {
+                return false;
+              }
+            } else {
+              return false;
+            }
+            return true;
+          } else {
+            return false;
+          }
+        }
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -90,16 +121,8 @@ public class PlannerUtil {
       if (scanNode.hasTargets()) {
         // If the number of columns in the select clause is s different from table schema,
         // This query is not a simple query.
-        if (scanNode.getTableDesc().hasPartition()) {
-          // In the case of partitioned table, the actual number of columns is ScanNode.InSchema + partitioned columns
-          int numPartitionColumns = scanNode.getTableDesc().getPartitionMethod().getExpressionSchema().size();
-          if (scanNode.getTargets().length != scanNode.getInSchema().size() + numPartitionColumns) {
-            return false;
-          }
-        } else {
-          if (scanNode.getTargets().length != scanNode.getInSchema().size()) {
-            return false;
-          }
+        if (scanNode.getTargets().length != scanNode.getTableDesc().getLogicalSchema().size()) {
+          return false;
         }
         noComplexComputation = true;
         for (int i = 0; i < scanNode.getTargets().length; i++) {

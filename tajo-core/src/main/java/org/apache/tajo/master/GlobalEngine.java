@@ -43,6 +43,7 @@ import org.apache.tajo.catalog.proto.CatalogProtos;
 import org.apache.tajo.catalog.statistics.TableStats;
 import org.apache.tajo.common.TajoDataTypes;
 import org.apache.tajo.conf.TajoConf;
+import org.apache.tajo.datum.Datum;
 import org.apache.tajo.datum.DatumFactory;
 import org.apache.tajo.engine.parser.SQLAnalyzer;
 import org.apache.tajo.engine.planner.physical.EvalExprExec;
@@ -58,6 +59,7 @@ import org.apache.tajo.master.session.Session;
 import org.apache.tajo.plan.*;
 import org.apache.tajo.plan.expr.EvalNode;
 import org.apache.tajo.plan.logical.*;
+import org.apache.tajo.plan.rewrite.rules.PartitionedTableRewriter;
 import org.apache.tajo.plan.util.PlannerUtil;
 import org.apache.tajo.plan.verifier.LogicalPlanVerifier;
 import org.apache.tajo.plan.verifier.PreLogicalPlanVerifier;
@@ -69,8 +71,7 @@ import org.apache.tajo.worker.TaskAttemptContext;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.tajo.TajoConstants.DEFAULT_TABLESPACE_NAME;
 import static org.apache.tajo.catalog.proto.CatalogProtos.AlterTablespaceProto;
@@ -301,6 +302,39 @@ public class GlobalEngine extends AbstractService {
         responseBuilder.setQueryId(QueryIdFactory.NULL_QUERY_ID.getProto());
         responseBuilder.setResultCode(ClientProtos.ResultCode.OK);
       }
+    } else if (PlannerUtil.checkIfPartitionDistinctSortQuery(plan)) {
+      // currently support only one column case
+      SortNode sortNode = rootNode.getChild();
+      GroupbyNode groupbyNode = sortNode.getChild();
+      PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
+      Schema schema = rootNode.getOutSchema();
+      RowStoreUtil.RowStoreEncoder encoder = RowStoreUtil.createEncoder(schema);
+      SerializedResultSet.Builder serializedResBuilder = SerializedResultSet.newBuilder();
+      byte[] serializedBytes;
+      int numRows = 0;
+      int numBytes = 0;
+      TreeSet<Datum> results = new TreeSet<Datum>();
+      for (Path path: partitionedTableScanNode.getInputPaths()) {
+        Tuple outTuple = PartitionedTableRewriter.buildTupleFromPartitionPath(schema, path, true);
+        results.add(outTuple.get(0));
+      }
+
+      for (Datum datum: results) {
+        Tuple outTuple = new VTuple(1);
+        outTuple.put(0, datum);
+        serializedBytes = encoder.toBytes(outTuple);
+        serializedResBuilder.addSerializedTuples(ByteString.copyFrom(serializedBytes));
+        numRows ++;
+        numBytes += serializedBytes.length;
+      }
+
+      serializedResBuilder.setSchema(schema.getProto());
+      serializedResBuilder.setBytesNum(numBytes);
+
+      responseBuilder.setResultSet(serializedResBuilder);
+      responseBuilder.setMaxRowNum(numRows);
+      responseBuilder.setQueryId(QueryIdFactory.NULL_QUERY_ID.getProto());
+      responseBuilder.setResultCode(ClientProtos.ResultCode.OK);
     } else { // it requires distributed execution. So, the query is forwarded to a query master.
       context.getSystemMetrics().counter("Query", "numDMLQuery").inc();
       hookManager.doHooks(queryContext, plan);

@@ -690,13 +690,8 @@ public class Repartitioner {
       }
     }
 
-    boolean ascendingFirstKey = sortSpecs[0].isAscending();
     SortedMap<TupleRange, Collection<FetchImpl>> map;
-    if (ascendingFirstKey) {
-      map = new TreeMap<TupleRange, Collection<FetchImpl>>();
-    } else {
-      map = new TreeMap<TupleRange, Collection<FetchImpl>>(new TupleRange.DescendingTupleRangeComparator());
-    }
+    map = new TreeMap<TupleRange, Collection<FetchImpl>>();
 
     Set<FetchImpl> fetchSet;
     try {
@@ -705,7 +700,7 @@ public class Repartitioner {
         fetchSet = new HashSet<FetchImpl>();
         for (FetchImpl fetch: fetches) {
           String rangeParam =
-              TupleUtil.rangeToQuery(ranges[i], ascendingFirstKey ? i == (ranges.length - 1) : i == 0, encoder);
+              TupleUtil.rangeToQuery(ranges[i], i == (ranges.length - 1), encoder);
           FetchImpl copy = null;
           try {
             copy = fetch.clone();
