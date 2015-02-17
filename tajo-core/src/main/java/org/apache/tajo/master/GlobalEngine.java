@@ -315,8 +315,10 @@ public class GlobalEngine extends AbstractService {
       int numBytes = 0;
       TreeSet<Datum> results = new TreeSet<Datum>();
       for (Path path: partitionedTableScanNode.getInputPaths()) {
-        Tuple outTuple = PartitionedTableRewriter.buildTupleFromPartitionPath(schema, path, true);
-        results.add(outTuple.get(0));
+        Tuple outTuple = PartitionedTableRewriter.buildTupleFromPartitionPath(schema, path, false);
+        if (outTuple != null) {
+          results.add(outTuple.get(0));
+        }
       }
 
       for (Datum datum: results) {

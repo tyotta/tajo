@@ -362,14 +362,14 @@ public class TestTablePartitions extends QueryTestCaseBase {
   public final void testSelectDistinctPartition() throws Exception {
     String tableName = CatalogUtil.normalizeIdentifier("testQueryCasesOnSelectDistinctPartition");
     ResultSet res = executeString(
-        "create table " + tableName + " (col1 int4, null_col int4) partition by column(col2 int4, key float8) ");
+        "create table " + tableName + " (col1 int4, null_col int4) partition by column(key float8, col2 int4) ");
     res.close();
 
     assertTrue(catalog.existsTable(DEFAULT_DATABASE_NAME, tableName));
 
     res = executeString(
         "insert overwrite into " + tableName
-            + " (col1, col2, key) select l_orderkey, l_partkey, l_quantity from lineitem");
+            + " (col1, key, col2) select l_orderkey, l_quantity, l_partkey from lineitem");
     res.close();
 
     res = executeFile("distinct_case1.sql");
