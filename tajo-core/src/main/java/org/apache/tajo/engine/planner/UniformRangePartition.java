@@ -302,6 +302,9 @@ public class UniformRangePartition extends RangePartitionAlgorithm {
       case TEXT: {
         if (isPureAscii[colId]) {
           byte[] lastBytes = last.asByteArray();
+          if (last.isNull()) {
+            lastBytes = BigInteger.valueOf(0).toByteArray();
+          }
           byte[] endBytes = mergedRange.getEnd().getBytes(colId);
 
           Preconditions.checkState(lastBytes.length == endBytes.length);
@@ -354,25 +357,26 @@ public class UniformRangePartition extends RangePartitionAlgorithm {
     return overflow;
   }
 
-  public long incrementAndGetReminder(int colId, Datum last, long inc) {
+  public BigInteger incrementAndGetReminder(int colId, Datum last, BigInteger inc) {
     Column column = sortSpecs[colId].getSortKey();
     long reminder = 0;
+    BigInteger reminderBigInt = null;
     switch (column.getDataType().getType()) {
       case BIT: {
-        long candidate = last.asByte() + inc;
+        long candidate = last.asByte() + inc.longValue();
         byte end = mergedRange.getEnd().get(colId).asByte();
         reminder = candidate - end;
         break;
       }
       case CHAR: {
-        long candidate = last.asChar() + inc;
+        long candidate = last.asChar() + inc.longValue();
         char end = mergedRange.getEnd().get(colId).asChar();
         reminder = candidate - end;
         break;
       }
       case DATE:
       case INT4: {
-        int candidate = (int) (last.asInt4() + inc);
+        int candidate = (int) (last.asInt4() + inc.longValue());
         int end = mergedRange.getEnd().get(colId).asInt4();
         reminder = candidate - end;
         break;
@@ -381,41 +385,47 @@ public class UniformRangePartition extends RangePartitionAlgorithm {
       case TIMESTAMP:
       case INT8:
       case INET4: {
-        long candidate = last.asInt8() + inc;
+        long candidate = last.asInt8() + inc.longValue();
         long end = mergedRange.getEnd().get(colId).asInt8();
         reminder = candidate - end;
         break;
       }
       case FLOAT4: {
-        float candidate = last.asFloat4() + inc;
+        float candidate = last.asFloat4() + inc.longValue();
         float end = mergedRange.getEnd().get(colId).asFloat4();
         reminder = (long) (candidate - end);
         break;
       }
       case FLOAT8: {
-        double candidate = last.asFloat8() + inc;
+        double candidate = last.asFloat8() + inc.longValue();
         double end = mergedRange.getEnd().get(colId).asFloat8();
         reminder = (long) Math.ceil(candidate - end);
         break;
       }
       case TEXT: {
         byte [] lastBytes = last.asByteArray();
+        if (last.isNull()) {
+          lastBytes = BigInteger.valueOf(0).toByteArray();
+        }
         byte [] endBytes = mergedRange.getEnd().get(colId).asByteArray();
 
         Preconditions.checkState(lastBytes.length == endBytes.length);
 
         BigInteger lastBInt = new BigInteger(lastBytes);
         BigInteger endBInt = new BigInteger(endBytes);
-        BigInteger incBInt = BigInteger.valueOf(inc);
 
-        BigInteger candidate = lastBInt.add(incBInt);
-        reminder = candidate.subtract(endBInt).longValue();
+        BigInteger candidate = lastBInt.add(inc);
+        reminderBigInt = candidate.subtract(endBInt);
         break;
       }
     }
 
     // including zero
-    return reminder - 1;
+    if (reminderBigInt != null) {
+      return reminderBigInt.subtract(BigInteger.ONE);
+    } else {
+      return new BigInteger(String.valueOf(reminder)).subtract(BigInteger.ONE);
+    }
   }
 
   /**
@@ -452,13 +462,13 @@ public class UniformRangePartition extends RangePartitionAlgorithm {
           throw new RangeOverflowException(mergedRange, last, incs[i].longValue(), sortSpecs[i].isAscending());
         }
         // increment some volume of the serialized one-dimension key space
-        long rem = incrementAndGetReminder(i, last.get(i), value.longValue());
-        incs[i] = BigInteger.valueOf(rem);
+        incs[i] = incrementAndGetReminder(i, last.get(i), value);
         incs[i - 1] = incs[i-1].add(BigInteger.ONE);
+        value = incs[i - 1];
         overflowFlag[i] = true;
       } else {
         if (i > 0) {
-          incs[i] = value;
+//          incs[i] = value;
           break;
         }
       }
@@ -560,8 +570,9 @@ public class UniformRangePartition extends RangePartitionAlgorithm {
           break;
         case TEXT:
           if (overflowFlag[i]) {
-            end.put(i, DatumFactory.createText(((char) (mergedRange.getStart().get(i).asChars().charAt(0)
-                + incs[i].longValue())) + ""));
+//            end.put(i, DatumFactory.createText(((char) (mergedRange.getStart().get(i).asChars().charAt(0)
+//                + incs[i].longValue())) + ""));
+            end.put(i, DatumFactory.createText(new BigInteger(mergedRange.getStart().get(i).asByteArray()).add(incs[i]).toByteArray()));
           } else {
             BigInteger lastBigInt;
             if (last.isNull(i)) {

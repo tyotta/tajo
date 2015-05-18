@@ -22,6 +22,7 @@ import org.apache.tajo.catalog.Schema;
 import org.apache.tajo.catalog.SortSpec;
 import org.apache.tajo.common.TajoDataTypes.Type;
 import org.apache.tajo.datum.DatumFactory;
+import org.apache.tajo.datum.NullDatum;
 import org.apache.tajo.plan.util.PlannerUtil;
 import org.apache.tajo.storage.BaseTupleComparator;
 import org.apache.tajo.storage.Tuple;
@@ -52,6 +53,165 @@ public class TestUniformRangePartition {
 
     UniformRangePartition partitioner = new UniformRangePartition(expected, sortSpecs);
     int partNum = 64;
+    TupleRange [] ranges = partitioner.partition(partNum);
+
+    TupleRange prev = null;
+    for (TupleRange r : ranges) {
+      if (prev != null) {
+        assertTrue(prev.compareTo(r) < 0);
+      }
+      prev = r;
+    }
+    assertEquals(partNum, ranges.length);
+    assertTrue(ranges[0].getStart().equals(s));
+    assertTrue(ranges[partNum - 1].getEnd().equals(e));
+  }
+
+  @Test
+  public void testParititionForHynix1() {
+    Schema schema = new Schema()
+        .addColumn("lotcd", Type.TEXT)
+        .addColumn("wl", Type.INT4)
+        .addColumn("XDIEPOS", Type.INT4);
+
+    SortSpec [] sortSpecs = PlannerUtil.schemaToSortSpecs(schema);
+
+    Tuple s = new VTuple(3);
+    Tuple e = new VTuple(3);
+    s.put(0, DatumFactory.createText("2SP"));
+    s.put(1, DatumFactory.createInt4(0));
+    s.put(2, DatumFactory.createInt4(12));
+    e.put(0, DatumFactory.createText("2SP"));
+    e.put(1, DatumFactory.createInt4(17));
+    e.put(2, DatumFactory.createInt4(55));
+
+    TupleRange expected = new TupleRange(sortSpecs, s, e);
+
+    UniformRangePartition partitioner = new UniformRangePartition(expected, sortSpecs);
+    int partNum = 71;
+    TupleRange [] ranges = partitioner.partition(partNum);
+
+    TupleRange prev = null;
+    for (TupleRange r : ranges) {
+      if (prev != null) {
+        assertTrue(prev.compareTo(r) < 0);
+      }
+      prev = r;
+    }
+    assertEquals(partNum, ranges.length);
+    assertTrue(ranges[0].getStart().equals(s));
+    assertTrue(ranges[partNum - 1].getEnd().equals(e));
+  }
+
+  @Test
+  public void testParititionForHynix2() {
+    Schema schema = new Schema()
+        .addColumn("lotcd", Type.TEXT)
+        .addColumn("lotid", Type.TEXT)
+        .addColumn("waferseq", Type.TEXT)
+        .addColumn("testid", Type.TEXT)
+        .addColumn("bias", Type.TEXT)
+        .addColumn("calccolumn", Type.TEXT);
+
+    SortSpec [] sortSpecs = PlannerUtil.schemaToSortSpecs(schema);
+
+    Tuple s = new VTuple(6);
+    Tuple e = new VTuple(6);
+    s.put(0, DatumFactory.createText("2SP"));
+    s.put(1, DatumFactory.createText("2SPR024"));
+    s.put(2, DatumFactory.createText("1"));
+    s.put(3, DatumFactory.createText("S00"));
+    s.put(4, NullDatum.get());
+    s.put(5, DatumFactory.createText("00-CYCLE SHIFT @0.5K"));
+
+    e.put(0, DatumFactory.createText("2SP"));
+    e.put(1, DatumFactory.createText("2SPR024"));
+    e.put(2, DatumFactory.createText("7"));
+    e.put(3, DatumFactory.createText("S00"));
+    e.put(4, NullDatum.get());
+    e.put(5, DatumFactory.createText("RR_PV7_DIST-SLOW_PAGE-PGM_DIST_PAGE-3.0K"));
+
+    TupleRange expected = new TupleRange(sortSpecs, s, e);
+
+    UniformRangePartition partitioner = new UniformRangePartition(expected, sortSpecs);
+    int partNum = 71;
+    TupleRange [] ranges = partitioner.partition(partNum);
+
+    TupleRange prev = null;
+    for (TupleRange r : ranges) {
+      if (prev != null) {
+        assertTrue(prev.compareTo(r) < 0);
+      }
+      prev = r;
+    }
+    assertEquals(partNum, ranges.length);
+    assertTrue(ranges[0].getStart().equals(s));
+    assertTrue(ranges[partNum - 1].getEnd().equals(e));
+  }
+
+  @Test
+  public void testParititionForHynix3() {
+    Schema schema = new Schema()
+        .addColumn("lotcd", Type.TEXT)
+        .addColumn("lotid", Type.TEXT)
+        .addColumn("waferseq", Type.TEXT)
+        .addColumn("testid", Type.TEXT)
+        .addColumn("calccolumn", Type.TEXT);
+
+    SortSpec [] sortSpecs = PlannerUtil.schemaToSortSpecs(schema);
+
+    Tuple s = new VTuple(5);
+    Tuple e = new VTuple(5);
+    s.put(0, DatumFactory.createText("2SP"));
+    s.put(1, DatumFactory.createText("2SPR024"));
+    s.put(2, DatumFactory.createText("1"));
+    s.put(3, DatumFactory.createText("S00"));
+    s.put(4, DatumFactory.createText("00-CYCLE SHIFT @0.5K"));
+
+    e.put(0, DatumFactory.createText("2SP"));
+    e.put(1, DatumFactory.createText("2SPR024"));
+    e.put(2, DatumFactory.createText("7"));
+    e.put(3, DatumFactory.createText("S00"));
+    e.put(4, DatumFactory.createText("RR_PV7_DIST-SLOW_PAGE-PGM_DIST_PAGE-3.0K"));
+
+    TupleRange expected = new TupleRange(sortSpecs, s, e);
+
+    UniformRangePartition partitioner = new UniformRangePartition(expected, sortSpecs);
+    int partNum = 71;
+    TupleRange [] ranges = partitioner.partition(partNum);
+
+    TupleRange prev = null;
+    for (TupleRange r : ranges) {
+      if (prev != null) {
+        assertTrue(prev.compareTo(r) < 0);
+      }
+      prev = r;
+    }
+    assertEquals(partNum, ranges.length);
+    assertTrue(ranges[0].getStart().equals(s));
+    assertTrue(ranges[partNum - 1].getEnd().equals(e));
+  }
+
+  @Test
+  public void testParititionForHynix4() {
+    Schema schema = new Schema()
+        .addColumn("wl", Type.INT4)
+        .addColumn("calccolumn", Type.TEXT);
+
+    SortSpec [] sortSpecs = PlannerUtil.schemaToSortSpecs(schema);
+
+    Tuple s = new VTuple(2);
+    Tuple e = new VTuple(2);
+    s.put(0, DatumFactory.createInt4(0));
+    s.put(1, DatumFactory.createText("00-CYCLE SHIFT @0.5K"));
+
+    e.put(0, DatumFactory.createInt4(17));
+    e.put(1, DatumFactory.createText("RR_PV7_DIST-SLOW_PAGE-PGM_DIST_PAGE-3.0K"));
+
+    TupleRange expected = new TupleRange(sortSpecs, s, e);
+
+    UniformRangePartition partitioner = new UniformRangePartition(expected, sortSpecs);
+    int partNum = 71;
     TupleRange [] ranges = partitioner.partition(partNum);
 
     TupleRange prev = null;
