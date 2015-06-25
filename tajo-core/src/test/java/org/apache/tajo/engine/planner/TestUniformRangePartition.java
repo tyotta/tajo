@@ -88,7 +88,7 @@ public class TestUniformRangePartition {
     TupleRange expected = new TupleRange(sortSpecs, s, e);
 
     UniformRangePartition partitioner = new UniformRangePartition(expected, sortSpecs);
-    int partNum = 71;
+    int partNum = 66;
     TupleRange [] ranges = partitioner.partition(partNum);
 
     TupleRange prev = null;

@@ -125,35 +125,6 @@ public class TestSelectQuery extends QueryTestCaseBase {
   }
 
   @Test
-  public final void testOrderbyQueryWithDuplicatedColumnPartitionedTable() throws Exception {
-    executeDDL("customer_dup_ddl.sql", null);
-    for (int i = 0; i < 5; i++) {
-      executeFile("insert_into_customer_dup.sql").close();
-    }
-    TableDesc tableDesc = testingCluster.getMaster().getCatalog().getTableDesc(getCurrentDatabase(), "customer_dup_parts_dummy");
-    if (tableDesc != null) {
-      executeString("create external table customer_dup_parts (\n" +
-          "  c_custkey    INT4,\n" +
-          "  c_name    TEXT,\n" +
-          "  c_address    TEXT,\n" +
-          "  c_nationkey INT4,\n" +
-          "  c_phone    TEXT,\n" +
-          "  c_acctbal    FLOAT8,\n" +
-          "  c_mktsegment    TEXT,\n" +
-          "  c_comment    TEXT\n" +
-          ") using csv PARTITION BY COLUMN (c_nationkey INT4) location '" + tableDesc.getPath().toString() + "' ").close();
-
-      ResultSet res = executeQuery();
-      assertResultSet(res);
-      cleanupQuery(res);
-
-      executeString("DROP TABLE customer_dup_parts").close();
-    }
-
-    executeString("DROP TABLE customer_dup_parts_dummy PURGE").close();
-  }
-
-  @Test
   public final void testExplainSelect() throws Exception {
     // explain select l_orderkey, l_partkey from lineitem;
     ResultSet res = executeQuery();
