@@ -50,8 +50,8 @@ public class TestTajoIds {
     assertFalse(j1.hashCode() == j3.hashCode());
 
     QueryId j5 = createQueryId(ts1, 231415);
-    assertEquals("q_" + ts1 + "_0002", j1.toString());
-    assertEquals("q_" + ts1 + "_231415", j5.toString());
+    assertEquals("q_" + ts1 + "_00000002", j1.toString());
+    assertEquals("q_" + ts1 + "_00231415", j5.toString());
   }
 
   @Test
@@ -59,16 +59,16 @@ public class TestTajoIds {
     long timeId = 1315890136000l;
     
     QueryId queryId = createQueryId(timeId, 1);
-    assertEquals("q_" + timeId + "_0001", queryId.toString());
+    assertEquals("q_" + timeId + "_00000001", queryId.toString());
     
     ExecutionBlockId subId = QueryIdFactory.newExecutionBlockId(queryId, 2);
-    assertEquals("eb_" + timeId +"_0001_000002", subId.toString());
+    assertEquals("eb_" + timeId +"_00000001_000002", subId.toString());
     
     QueryUnitId qId = new QueryUnitId(subId, 5);
-    assertEquals("t_" + timeId + "_0001_000002_000005", qId.toString());
+    assertEquals("t_" + timeId + "_00000001_000002_000005", qId.toString());
 
     QueryUnitAttemptId attemptId = new QueryUnitAttemptId(qId, 4);
-    assertEquals("ta_" + timeId + "_0001_000002_000005_04", attemptId.toString());
+    assertEquals("ta_" + timeId + "_00000001_000002_000005_04", attemptId.toString());
   }
 
   @Test

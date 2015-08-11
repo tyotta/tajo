@@ -1,0 +1,1 @@
+select distinct key as akey from testQueryCasesOnSelectDistinctPartitionWithAlias where akey is not null order by akey;

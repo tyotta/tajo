@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QueryIdFactory {
   public static final QueryId NULL_QUERY_ID = newQueryId(TajoIdUtils.MASTER_ID_FORMAT.format(0), 0);
 
-  public static final DecimalFormat ID_FORMAT = new DecimalFormat("0000");
+  public static final DecimalFormat ID_FORMAT = new DecimalFormat("00000000");
 
   public static final  DecimalFormat EB_ID_FORMAT = new DecimalFormat("000000");
 
@@ -58,7 +58,7 @@ public class QueryIdFactory {
       return new QueryId(tokens[1], Integer.parseInt(tokens[2]));
     } else {
       int seq = queryNextId.incrementAndGet();
-      if(seq >= 10000) {
+      if(seq >= 100000000) {
         queryNextId.set(0);
         seq = queryNextId.incrementAndGet();
       }
