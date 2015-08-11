@@ -58,6 +58,7 @@ import org.apache.tajo.master.querymaster.QueryMasterTask;
 import org.apache.tajo.master.session.Session;
 import org.apache.tajo.plan.*;
 import org.apache.tajo.plan.expr.EvalNode;
+import org.apache.tajo.plan.expr.FieldEval;
 import org.apache.tajo.plan.logical.*;
 import org.apache.tajo.plan.rewrite.rules.PartitionedTableRewriter;
 import org.apache.tajo.plan.util.PlannerUtil;
@@ -308,6 +309,8 @@ public class GlobalEngine extends AbstractService {
       GroupbyNode groupbyNode = sortNode.getChild();
       PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
       Schema schema = rootNode.getOutSchema();
+      Schema schemaWithoutAlias = new Schema();
+      schemaWithoutAlias.addColumn(((FieldEval)partitionedTableScanNode.getTargets()[0].getEvalTree()).getColumnRef());
       RowStoreUtil.RowStoreEncoder encoder = RowStoreUtil.createEncoder(schema);
       SerializedResultSet.Builder serializedResBuilder = SerializedResultSet.newBuilder();
       byte[] serializedBytes;
@@ -315,7 +318,7 @@ public class GlobalEngine extends AbstractService {
       int numBytes = 0;
       TreeSet<Datum> results = new TreeSet<Datum>();
       for (Path path: partitionedTableScanNode.getInputPaths()) {
-        Tuple outTuple = PartitionedTableRewriter.buildTupleFromPartitionPath(schema, path, false);
+        Tuple outTuple = PartitionedTableRewriter.buildTupleFromPartitionPath(schemaWithoutAlias, path, false);
         if (outTuple != null) {
           results.add(outTuple.get(0));
         }

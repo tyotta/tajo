@@ -70,7 +70,7 @@ public class PlannerUtil {
         if (groupbyNode.getChild().getType() == NodeType.PARTITIONS_SCAN) {
           PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
           if (groupbyNode.getGroupingColumns().length == 1) {
-            Column column = groupbyNode.getGroupingColumns()[0];
+            Column column = ((FieldEval)partitionedTableScanNode.getTargets()[0].getEvalTree()).getColumnRef();
             if (partitionedTableScanNode.getTableDesc().hasPartition()) {
               PartitionMethodDesc partitionMethodDesc = partitionedTableScanNode.getTableDesc().getPartitionMethod();
               if (partitionMethodDesc.getExpressionSchema().getColumn(column.getSimpleName()) == null) {
