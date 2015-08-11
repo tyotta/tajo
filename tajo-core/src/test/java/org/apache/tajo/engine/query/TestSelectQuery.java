@@ -483,6 +483,32 @@ public class TestSelectQuery extends QueryTestCaseBase {
   }
 
   @Test
+  public final void testHynixOrderby() throws Exception {
+    KeyValueSet tableOptions = new KeyValueSet();
+    tableOptions.set(StorageConstants.TEXT_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER);
+    tableOptions.set(StorageConstants.TEXT_NULL, "\\\\N");
+
+    Schema schema = new Schema();
+    schema.addColumn("lotcd", Type.TEXT);
+    schema.addColumn("lotid", Type.TEXT);
+    schema.addColumn("waferseq", Type.TEXT);
+    schema.addColumn("testid", Type.TEXT);
+    schema.addColumn("bias", Type.TEXT);
+    schema.addColumn("wl", Type.INT4);
+    String[] data = new String[]{ "2SP|2SPR024|1|S00|\\N|0", "2SP|2SPR024|7|S00|\\N|17" };
+    TajoTestingCluster.createTable("table11", schema, tableOptions, data, 6);
+
+    try {
+      testingCluster.setAllTajoDaemonConfValue(ConfVars.$TEST_MIN_TASK_NUM.varname, "2");
+      ResultSet res = executeString("select * from table11 order by lotcd, lotid, waferseq, testid, bias, wl");
+    } finally {
+      testingCluster.setAllTajoDaemonConfValue(ConfVars.$TEST_MIN_TASK_NUM.varname,
+          ConfVars.$TEST_MIN_TASK_NUM.defaultVal);
+      executeString("DROP TABLE table11 PURGE");
+    }
+  }
+
+  @Test
   public final void testNowInMultipleTasks() throws Exception {
     KeyValueSet tableOptions = new KeyValueSet();
     tableOptions.set(StorageConstants.TEXT_DELIMITER, StorageConstants.DEFAULT_FIELD_DELIMITER);
