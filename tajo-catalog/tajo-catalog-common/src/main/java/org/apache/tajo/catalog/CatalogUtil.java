@@ -132,6 +132,10 @@ public class CatalogUtil {
   }
 
   public static boolean isShouldBeQuoted(String columnName) {
+    if(Character.isDigit(columnName.charAt(0))) {
+      return true;
+    }
+
     for (char character : columnName.toCharArray()) {
       if (Character.isUpperCase(character)) {
         return true;
