@@ -60,36 +60,41 @@ public class PlannerUtil {
             baseNode.getType() == NodeType.TRUNCATE_TABLE;
   }
 
-  public static boolean checkIfPartitionDistinctSortQuery(LogicalPlan plan) {
+  public static boolean checkIfPartitionDistinctQuery(LogicalPlan plan) {
     LogicalRootNode rootNode = plan.getRootBlock().getRoot();
 
     if (rootNode.getChild().getType() == NodeType.SORT) {
       SortNode sortNode = rootNode.getChild();
-      if (sortNode.getChild().getType() == NodeType.GROUP_BY) {
-        GroupbyNode groupbyNode = sortNode.getChild();
-        if (groupbyNode.getChild().getType() == NodeType.PARTITIONS_SCAN) {
-          PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
-          if (groupbyNode.getGroupingColumns().length == 1 && groupbyNode.getTargets().length == 1) {
-            Column column = ((FieldEval)partitionedTableScanNode.getTargets()[0].getEvalTree()).getColumnRef();
-            if (partitionedTableScanNode.getTableDesc().hasPartition()) {
-              PartitionMethodDesc partitionMethodDesc = partitionedTableScanNode.getTableDesc().getPartitionMethod();
-              if (partitionMethodDesc.getExpressionSchema().getColumn(column.getSimpleName()) == null) {
-                return false;
-              }
-            } else {
+      return checkIfPartitionDistinct(sortNode);
+    }
+
+    return checkIfPartitionDistinct(rootNode);
+  }
+
+  public static boolean checkIfPartitionDistinct(UnaryNode rootNode) {
+    if (rootNode.getChild().getType() == NodeType.GROUP_BY) {
+      GroupbyNode groupbyNode = rootNode.getChild();
+      if (groupbyNode.getChild().getType() == NodeType.PARTITIONS_SCAN) {
+        PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
+        if (groupbyNode.getGroupingColumns().length == 1 && groupbyNode.getTargets().length == 1) {
+          Column column = ((FieldEval)partitionedTableScanNode.getTargets()[0].getEvalTree()).getColumnRef();
+          if (partitionedTableScanNode.getTableDesc().hasPartition()) {
+            PartitionMethodDesc partitionMethodDesc = partitionedTableScanNode.getTableDesc().getPartitionMethod();
+            if (partitionMethodDesc.getExpressionSchema().getColumn(column.getSimpleName()) == null) {
               return false;
             }
-            return true;
           } else {
             return false;
           }
+          return true;
+        } else {
+          return false;
         }
       }
     }
 
     return false;
   }
-
   /**
    * Checks whether the query is simple or not.
    * The simple query can be defined as 'select * from tb_name [LIMIT X]'.

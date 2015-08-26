@@ -303,10 +303,15 @@ public class GlobalEngine extends AbstractService {
         responseBuilder.setQueryId(QueryIdFactory.NULL_QUERY_ID.getProto());
         responseBuilder.setResultCode(ClientProtos.ResultCode.OK);
       }
-    } else if (PlannerUtil.checkIfPartitionDistinctSortQuery(plan)) {
+    } else if (PlannerUtil.checkIfPartitionDistinctQuery(plan)) {
       // currently support only one column case
-      SortNode sortNode = rootNode.getChild();
-      GroupbyNode groupbyNode = sortNode.getChild();
+      GroupbyNode groupbyNode;
+      if (rootNode.getChild().getType() == NodeType.SORT) {
+        SortNode sortNode = rootNode.getChild();
+        groupbyNode = sortNode.getChild();
+      } else {
+        groupbyNode = rootNode.getChild();
+      }
       PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
       Schema schema = rootNode.getOutSchema();
       Schema schemaWithoutAlias = new Schema();
