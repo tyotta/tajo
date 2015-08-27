@@ -78,17 +78,19 @@ public class PlannerUtil {
         PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
         EvalNode qual = partitionedTableScanNode.getQual();
         Column column = ((FieldEval)partitionedTableScanNode.getTargets()[0].getEvalTree()).getColumnRef();
-        if (qual.getType() != EvalType.IS_NULL) {
-          return false;
-        } else {
-          if (((IsNullEval)qual).getChild().getType() != EvalType.FIELD) {
+        if (qual != null) {
+          if (qual.getType() != EvalType.IS_NULL) {
             return false;
+          } else {
+            if (((IsNullEval)qual).getChild().getType() != EvalType.FIELD) {
+              return false;
+            }
+            FieldEval field = (FieldEval)(((IsNullEval) qual).getChild());
+            if (!field.getColumnRef().equals(column)) {
+              return false;
+            }
           }
-          FieldEval field = (FieldEval)(((IsNullEval) qual).getChild());
-          if (!field.getColumnRef().equals(column)) {
-            return false;
-          }
-        }
+        }        
         if (groupbyNode.getGroupingColumns().length == 1 && groupbyNode.getTargets().length == 1) {
           if (partitionedTableScanNode.getTableDesc().hasPartition()) {
             PartitionMethodDesc partitionMethodDesc = partitionedTableScanNode.getTableDesc().getPartitionMethod();
