@@ -1,0 +1,1 @@
+select distinct key from testQueryCasesOnNotSelectDistinctPartition where key is not null and col1 > 2 order by key;
