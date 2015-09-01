@@ -75,23 +75,27 @@ public class PlannerUtil {
     if (rootNode.getChild().getType() == NodeType.GROUP_BY) {
       GroupbyNode groupbyNode = rootNode.getChild();
       if (groupbyNode.getChild().getType() == NodeType.PARTITIONS_SCAN) {
-        PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
-        EvalNode qual = partitionedTableScanNode.getQual();
-        Column column = ((FieldEval)partitionedTableScanNode.getTargets()[0].getEvalTree()).getColumnRef();
-        if (qual != null) {
-          if (qual.getType() != EvalType.IS_NULL) {
+        if (groupbyNode.getGroupingColumns().length == 1 && groupbyNode.getTargets().length == 1) {
+          PartitionedTableScanNode partitionedTableScanNode = groupbyNode.getChild();
+          EvalNode qual = partitionedTableScanNode.getQual();
+          EvalNode evalNode = partitionedTableScanNode.getTargets()[0].getEvalTree();
+          if (evalNode.getType() != EvalType.FIELD) {
             return false;
-          } else {
-            if (((IsNullEval)qual).getChild().getType() != EvalType.FIELD) {
+          }
+          Column column = ((FieldEval)evalNode).getColumnRef();
+          if (qual != null) {
+            if (qual.getType() != EvalType.IS_NULL) {
               return false;
-            }
-            FieldEval field = (FieldEval)(((IsNullEval) qual).getChild());
-            if (!field.getColumnRef().equals(column)) {
-              return false;
+            } else {
+              if (((IsNullEval)qual).getChild().getType() != EvalType.FIELD) {
+                return false;
+              }
+              FieldEval field = (FieldEval)(((IsNullEval) qual).getChild());
+              if (!field.getColumnRef().equals(column)) {
+                return false;
+              }
             }
           }
-        }        
-        if (groupbyNode.getGroupingColumns().length == 1 && groupbyNode.getTargets().length == 1) {
           if (partitionedTableScanNode.getTableDesc().hasPartition()) {
             PartitionMethodDesc partitionMethodDesc = partitionedTableScanNode.getTableDesc().getPartitionMethod();
             if (partitionMethodDesc.getExpressionSchema().getColumn(column.getSimpleName()) == null) {
