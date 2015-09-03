@@ -65,6 +65,8 @@ public class PlannerUtil {
 
     if (rootNode.getChild().getType() == NodeType.SORT) {
       SortNode sortNode = rootNode.getChild();
+      if (sortNode.getSortKeys().length != 1)
+        return false;
       return checkIfPartitionDistinct(sortNode);
     }
 

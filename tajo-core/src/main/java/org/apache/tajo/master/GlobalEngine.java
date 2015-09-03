@@ -306,8 +306,10 @@ public class GlobalEngine extends AbstractService {
     } else if (PlannerUtil.checkIfPartitionDistinctQuery(plan)) {
       // currently support only one column case
       GroupbyNode groupbyNode;
+      Boolean asc = true;
       if (rootNode.getChild().getType() == NodeType.SORT) {
         SortNode sortNode = rootNode.getChild();
+        asc = sortNode.getSortKeys()[0].isAscending();
         groupbyNode = sortNode.getChild();
       } else {
         groupbyNode = rootNode.getChild();
@@ -329,7 +331,7 @@ public class GlobalEngine extends AbstractService {
         }
       }
 
-      for (Datum datum: results) {
+      for (Datum datum: (asc ? results :  results.descendingSet())) {
         Tuple outTuple = new VTuple(1);
         outTuple.put(0, datum);
         serializedBytes = encoder.toBytes(outTuple);
