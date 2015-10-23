@@ -269,6 +269,9 @@ public class StringUtils {
   }
 
   public static String unescapePathName(String path) {
+    if ("__TAJO_DEFAULT_PARTITION__".equals(path)) {
+      return "";
+    }
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < path.length(); i++) {
       char c = path.charAt(i);

@@ -1051,4 +1051,23 @@ public class TestTablePartitions extends QueryTestCaseBase {
     assertResultSet(res);
     cleanupQuery(res);
   }
+
+  @Test
+  public final void TestNullPartitionKey() throws Exception {
+    String tableName = CatalogUtil.normalizeIdentifier("testQueryCasesOnNoPartitionKey");
+    ResultSet res = executeString(
+        "create table " + tableName + " (col1 int4, null_col int4) partition by column(key float8, col2 text) ");
+    res.close();
+
+    assertTrue(catalog.existsTable(DEFAULT_DATABASE_NAME, tableName));
+
+    res = executeString(
+        "insert overwrite into " + tableName
+            + " (col1, key, col2) select l_orderkey, l_quantity, '' from lineitem");
+    res.close();
+
+    res = executeFile("nullpartition_case1.sql");
+    assertResultSet(res, "nullpartition_case1.result");
+    res.close();
+  }
 }
