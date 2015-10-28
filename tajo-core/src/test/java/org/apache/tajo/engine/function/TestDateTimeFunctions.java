@@ -111,6 +111,9 @@ public class TestDateTimeFunctions extends ExprTestBase {
 
     q = "select to_char(to_timestamp('1997-12-30 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')";
     testSimpleEval(q, new String[]{"1997-12-30 00:00:00"});
+
+    q = "select to_char('1997-12-30'::date, 'YYYY-MM-DD')";
+    testSimpleEval(q, new String[]{"1997-12-30"});
   }
 
   @Test
