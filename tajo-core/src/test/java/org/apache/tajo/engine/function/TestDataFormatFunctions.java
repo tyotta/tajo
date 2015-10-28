@@ -62,6 +62,16 @@ public class TestDataFormatFunctions extends ExprTestBase {
     testSimpleEval("select to_char(-123456, '99,999,999') ", new String[]{"  -123,456"});
     testSimpleEval("select to_char(-123.12345, '999999.999,999,9') ", new String[]{"   -123.123,450,0"});
 
+    testSimpleEval("select to_char(123456)", new String[]{"123456"});
+    testSimpleEval("select to_char(123.456)", new String[]{"123.456"});
+    testSimpleEval("select to_char(123456::int8)", new String[]{"123456"});
+    testSimpleEval("select to_char(123.456::float8)", new String[]{"123.456"});
+
+    testSimpleEval("select to_char(-123456)", new String[]{"-123456"});
+    testSimpleEval("select to_char(-123.456)", new String[]{"-123.456"});
+    testSimpleEval("select to_char(-123456::int8)", new String[]{"-123456"});
+    testSimpleEval("select to_char(-123.456::float8)", new String[]{"-123.456"});
+
     Schema schema = new Schema();
     schema.addColumn("col1", FLOAT8);
     schema.addColumn("col2", TEXT);

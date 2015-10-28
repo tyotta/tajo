@@ -43,7 +43,11 @@ import org.apache.tajo.storage.Tuple;
     paramTypes = {@ParamTypes(paramTypes = {TajoDataTypes.Type.INT4, TajoDataTypes.Type.TEXT}),
         @ParamTypes(paramTypes = {TajoDataTypes.Type.INT8, TajoDataTypes.Type.TEXT}),
         @ParamTypes(paramTypes = {TajoDataTypes.Type.FLOAT4, TajoDataTypes.Type.TEXT}),
-        @ParamTypes(paramTypes = {TajoDataTypes.Type.FLOAT8, TajoDataTypes.Type.TEXT})
+        @ParamTypes(paramTypes = {TajoDataTypes.Type.FLOAT8, TajoDataTypes.Type.TEXT}),
+        @ParamTypes(paramTypes = TajoDataTypes.Type.INT4),
+        @ParamTypes(paramTypes = TajoDataTypes.Type.INT8),
+        @ParamTypes(paramTypes = TajoDataTypes.Type.FLOAT4),
+        @ParamTypes(paramTypes = TajoDataTypes.Type.FLOAT8)
     }
 )
 public class ToCharDataFormat extends GeneralFunction {
@@ -197,14 +201,24 @@ public class ToCharDataFormat extends GeneralFunction {
     long dotUpper=0;
 
     Datum number = params.get(0);
-    Datum pattern = params.get(1);
     StringBuilder result = new StringBuilder();
 
-    if(number instanceof NullDatum || pattern instanceof NullDatum) {
+    if(number instanceof  NullDatum) {
       return NullDatum.get();
     }
 
     num = number.asChars();
+
+    if(params.size() == 1) {
+      return DatumFactory.createText(num);
+    }
+
+    Datum pattern = params.get(1);
+
+    if(pattern instanceof NullDatum) {
+      return NullDatum.get();
+    }
+
     pttn = pattern.asChars();
     int[] commaIndex = new int[pttn.length()];
     for(int i=0;i<commaIndex.length;i++)
