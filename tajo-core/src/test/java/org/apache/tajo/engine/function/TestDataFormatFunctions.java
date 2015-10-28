@@ -107,4 +107,12 @@ public class TestDataFormatFunctions extends ExprTestBase {
 
     testSimpleEval("select to_char_java(12345) ", new String[]{"12345"});
   }
+
+  @Test
+  public void testToNumber() throws IOException {
+    testSimpleEval("select to_number('123')", new String[]{"123.0"});
+    testSimpleEval("select to_number('123.456')", new String[]{"123.456"});
+    testSimpleEval("select to_number('-123')", new String[]{"-123.0"});
+    testSimpleEval("select to_number('-123.456')", new String[]{"-123.456"});
+  }
 }
