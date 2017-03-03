@@ -170,7 +170,7 @@ public class QueryUnit implements EventHandler<TaskEvent> {
                   TaskEventType.T_ATTEMPT_KILLED, TaskEventType.T_ATTEMPT_SUCCEEDED, TaskEventType.T_ATTEMPT_FAILED))
 
           // Transitions from KILLED state
-          .addTransition(TaskState.KILLED, TaskState.KILLED, TaskEventType.T_ATTEMPT_KILLED, new KillTaskTransition())
+          .addTransition(TaskState.KILLED, TaskState.KILLED, TaskEventType.T_ATTEMPT_KILLED)
           // Ignore-able transitions
           .addTransition(TaskState.KILLED, TaskState.KILLED,
               EnumSet.of(
