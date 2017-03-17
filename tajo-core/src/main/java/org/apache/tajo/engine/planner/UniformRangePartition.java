@@ -20,7 +20,6 @@ package org.apache.tajo.engine.planner;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.sun.tools.javac.util.Convert;
 import org.apache.tajo.catalog.Column;
 import org.apache.tajo.catalog.SortSpec;
 import org.apache.tajo.common.TajoDataTypes;
@@ -39,6 +38,7 @@ import org.apache.tajo.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.Charset;
 import java.util.List;
 
 /**
@@ -637,7 +637,7 @@ public class UniformRangePartition extends RangePartitionAlgorithm {
                   }
                 }
 
-                end.put(i, DatumFactory.createText(Convert.chars2utf(lastChars)));
+                end.put(i, DatumFactory.createText(new String(lastChars).getBytes(Charset.forName("UTF-8"))));
               }
             }
           }
